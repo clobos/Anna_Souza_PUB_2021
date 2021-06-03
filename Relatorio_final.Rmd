@@ -1,0 +1,267 @@
+---
+title: "Os efeitos do isolamento social quanto ao equilíbrio mental, físico e psicológico"
+author: "Anna Beatriz Queiroz Di Souza e Cristian Villegas"
+date: ' '
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE,warning=FALSE, message=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = TRUE,
+                      message = FALSE, 
+                      error   = TRUE) 
+library(readxl)
+library(tidyverse)
+library(magrittr)
+```
+
+```{r, echo=FALSE}
+#Configuração de legendas ggplot2
+configuracao<- theme(
+    axis.title.x = element_text(color="black", 
+                                size=12, face="bold"), 
+    axis.title.y = element_text(color="black", 
+                                size=12, face="bold"), 
+    strip.text.x = element_text(
+      size=12, color = "black", 
+      face = "bold"
+    ),
+    strip.text.y = element_text(
+      size=12, color = "blue", 
+      face = "bold"
+    ),
+    axis.text.x = element_text(
+      size = 12, color = "black", 
+      face = "bold" ),
+    axis.text.y = element_text(
+      size=12, color = "black", 
+      face = "bold"
+    ),
+    legend.position = "none")
+```
+
+```{r}
+dados <- read_excel("dados.xlsx")
+
+dados<- transform(dados,
+                  genero=factor(genero),
+                  aluno=factor(aluno),
+                  curso=factor(curso),
+                  pessoas=factor(pessoas),
+                  renda=factor(renda),
+       atividades=factor(atividades),
+       mudancas=factor(mudancas),
+       exercicios=factor(exercicios),
+       redes=factor(redes),
+       interacao=factor(interacao),
+       hobbies=factor(hobbies),
+       estresse=factor(estresse),
+       ansiedade=factor(ansiedade),
+       trist=factor(trist),
+       preoc=factor(preoc),
+procr=factor(procr),
+estudo=factor(estudo),
+aliment=factor(aliment),
+sono=factor(sono),
+pfisicos=factor(pfisicos),
+pemocionais=factor(pemocionais),
+pdiversos=factor(pdiversos)
+                  )
+
+#table(dados$curso)
+
+dados<- transform(dados,
+                   curso=ordered(curso, levels=c("Administração", "Ciências dos Alimentos", "Ciências Biológicas", "Ciências Econômicas", "Engenharia Agronômica", "Engenharia Florestal", "Gestão Ambiental", "Mestrado", "Doutorado")),
+                   pessoas=ordered(pessoas, levels = c("1","2 ou 3", "4 ou 5","+ de 5")),
+                  renda=ordered(renda, levels = c("Até 1","2 a 4", "4 a 6","6 a 8", "+ de 8","PNR")))
+
+# dim(dados)
+# str(dados)
+summary(dados[,1:12])
+summary(dados[,13:24])
+```
+
+Foram consideradas **`r nrow(dados)` respostas**, as quais foram recolhidas entre os dias 07 e 20 de dezembro de 2020 por meio do Google Forms.
+
+## Alterações na renda familiar com o advento da pandemia
+
+Sabendo que o isolamento social trouxe consigo tribulações econômicas que prejudicaram os brasileiros, a pesquisa buscou entender quais modificações na renda familiar os estudantes da ESALQ sofreram ao longo da pandemia. Para isso, foi pedido que os alunos selecionassem todas as alternativas que se aplicassem com qualquer um dos membros da família que contribui na renda mensal.
+
+```{r}
+aux1<- data.frame(x=as.character(dados$mudancas))
+aux2<- aux1 %>% separate(x, letters[1:11], sep = "([ ,])",
+                             extra = "drop", fill = "right")
+
+aux3<- c(aux2[,1],aux2[,3],aux2[,5], aux2[,7],aux2[,9],aux2[,11])
+#table(aux3)
+aux4<- na.omit(data.frame(x=factor(aux3)))
+
+ggplot(aux4, aes(x))+geom_bar()+theme(axis.text.x = element_text(angle = 90))+configuracao+
+  labs(#title="Alterações na renda familiar a partir da pandemia", 
+       y="Contagem",
+       x= "Alterações")
+ggsave("figura1.jpeg")  
+```
+
+A maioria dos entrevistados (202 alunos) informou que o isolamento social acarretou em "Gastos maiores com compras do mês e contas de água/luz/internet", provavelmente motivados pelo maior tempo em casa, gerando aumento no consumo de energia elétrica e água, por exemplo. A segunda resposta mais assinalada foi "Redução salarial temporária", relatada por 96 alunos, seja por diminuição do rendimento de empreendimentos ou pelo corte de salário que algumas empresas adotaram como medida para superar a crise econômica advinda do cenário pandêmico. Para 78 alunos, não houveram mudanças na renda familiar mensal desde a quarentena. As respostas "Demissão" e "Afastamento" foram marcadas 34 e 24 vezes, respectivamente, o que reflete o impacto do isolamento social na vida dos cidadãos e em suas condições de sobrevivência. Por outro lado, 26 pessoas relataram "Contratação", 11 "Aumento salarial temporário" e 4 "Aumento salarial permanente", sugerindo que a quarentena beneficiou, mesmo que em partes, as condições salariais de algum membro da família. Por fim, 13 estudantes informaram que uma das alterações foram os "Gastos menores com compras do mês e contas de água/luz/internet". 
+
+Nota-se que **a grande maioria dos alunos da ESALQ passou por gastos financeiros maiores em suas rotinas mensais. Parte deles e de suas famílias sofreu de redução salarial temporária e um número representativo de aproximadamente 30% dos alunos não passou por nenhuma alteração em suas rendas ao longo da pandemia**.
+
+
+## Nível de estresse de acordo com a renda
+
+Sabendo que as preocupações financeiras são um dos grandes motivos para o estresse individual, a pesquisa tentou encontrar uma correlação entre os fatores **renda** e **nível de estresse durante a quarentena**. 
+
+```{r}
+table(dados$estresse)
+round(prop.table(table(dados$estresse)),2)
+table(dados$estresse,dados$renda)
+round(prop.table(table(dados$estresse,dados$renda)),2)
+
+ggplot(dados,aes(x=estresse, fill=renda)) +
+  geom_bar(aes(y=..prop.., group=renda),position="dodge") +
+  facet_wrap(~renda)+theme(axis.text.x = element_text(angle = 90))+configuracao +
+ # ggtitle("O que aconteceu com seu nível de estresse durante a pandemia?") +
+  ylab("Proporção") +
+  xlab("Nível de estresse")
+ggsave("figura2.jpeg")
+```
+
+O estresse foi um dos fatores que mais se destacou na quantidade de pessoas entrevistadas relatando estarem mais estressadas. Foram 271 respostas indicando aumento do nível do estresse a partir da implantação da quarentena, correspondendo a 84% do total de respondentes. Apenas 17 pessoas, ou 5% da amostra, apontaram estar menos estressadas. Por fim, 36 respostas foram sobre manutenção da taxa de estresse quando comparados os períodos antes e durante a pandemia, um total de 11%.
+
+A da maioria das respostas indicou um **aumento do nível de estresse, independente da renda familiar mensal.** Entretanto, ao analisar o gráfico com atenção, é possível notar que a proporção de respostas "aumentou muito" foi mais significativa partindo da menor renda familiar mensal para a maior, isto é, quanto menor a renda, maior o aumento no nível de estresse. Assim, quase 80% das pessoas que recebem até 1 salário mínimo informaram grande aumento do estresse, enquanto a taxa foi de 65% para aquelas com 2 a 4 salários mínimos, 62% para renda de 4 a 6 salários mínimos, 53% para os com 6 a 8 salários mínimos e menos de 50% para as pessoas com mais de 8 salários mínimos. **Essa tendência sugere uma relação entre as condições econômicas e o estresse no contexto pandêmico.**
+
+
+## Nível de ansiedade de acordo com a renda
+
+Na mesma perspectiva, foram avaliados os critérios de **renda** e **nível de ansiedade durante a quarentena**. 
+
+```{r}
+table(dados$ansiedade)
+round(prop.table(table(dados$ansiedade)),2)
+table(dados$ansiedade,dados$renda)
+round(prop.table(table(dados$ansiedade,dados$renda)),2)
+
+ggplot(dados,aes(x=ansiedade, fill=renda)) +
+  geom_bar(aes(y=..prop.., group=renda),position="dodge") +
+  facet_wrap(~renda)+theme(axis.text.x = element_text(angle = 90))+configuracao +
+  #ggtitle("O que aconteceu com seu nível de ansiedade durante a pandemia?") +
+  ylab("Proporção") +
+  xlab("Nível de ansiedade")
+ggsave("figura3.jpeg")
+```
+
+De modo semelhante ao critério avaliado anteriormente, 271 pessoas (84%) relataram aumento no nível de ansiedade, sendo 190 (59%) queixando-se de aumento significativo, e 81 (25%) de aumento leve. Para apenas 13 pessoas (4%) houve diminuição da ansiedade, enquanto 40 (12%) apontaram que as taxas se mantiveram.
+
+Fazendo um comparativo por renda, foi observado que, **quanto menos salários mínimos compõem a renda familiar mensal, maior foi a quantidade de respostas indicando grande aumento do nível de ansiedade**. O gráfico abaixo representa tal proporção. 
+
+
+## Nível de preocupação de acordo com a renda
+
+As condições financeiras são um dos principais fatores no que tange à preocupação dos indivíduos, tendo em vista que a renda é necessária para sustentar a si mesmo e aos familiares. Dessa maneira, é de se esperar que quanto maior for o conforto monetário, menores seriam algumas das preocupações dos entrevistados. Para confirmar tal hipótese, a pesquisa analisou o nível de preocupação dos alunos de acordo com a renda salarial mensal, em salários mínimos. 
+
+```{r}
+table(dados$preoc)
+round(prop.table(table(dados$preoc)),2)
+table(dados$preoc,dados$renda)
+round(prop.table(table(dados$preoc,dados$renda)),2)
+
+ggplot(dados,aes(x=preoc, fill=renda)) +
+  geom_bar(aes(y=..prop.., group=renda),position="dodge") +
+  facet_wrap(~renda)+theme(axis.text.x = element_text(angle = 90))+configuracao +
+  #ggtitle("O que aconteceu com seu nível de preocupação durante a pandemia?") +
+  ylab("Proporção") +
+  xlab("Nível de preocupação")
+ggsave("figura4.jpeg")
+```
+
+O maior percentual de respostas indicando grande aumento do nível de preocupação foi para os estudantes que possuem renda mensal entre 2 a 4 salários mínimos. Para as faixas salariais entre 6 a 8 e acima de 8, a quantidade de respostas "aumentou muito" foi por volta de 50%, enquanto que para as pessoas que recebem até 1 salário mínimo e entre 4 a 6, foi de 60%. 
+
+Os resultados apontam que para os alunos com renda superior a 6 salários, o aumento significativo da preocupação aconteceu para cerca de 50% deles. Já para estudantes com até 1 salário ou de 4 a 6, o aumento da preocupação foi maior, correspondendo a aproximadamente 60%. Por fim, o maior aumento (70% das respostas) aconteceu  nos indivíduos com entre 2 a 4 salários mínimos. **Os diferentes percentuais sugerem que pode haver uma correlação entre as taxas de preocupação e a renda familiar mensal dos estudantes da ESALQ**, mas são necessários mais estudos para confirmar. 
+
+
+## Realização de hobbies e atividades por prazer de acordo com o curso
+
+A realização de hobbies e atividades por prazer é muito importante para manter a saúde mental da população, estando relacionada aos momentos de lazer e bem estar individual. Nesse quesito, sabendo que a rotina acadêmica dos estudantes de cada curso oferecido pela ESALQ é diferente, a pesquisa buscou comparar se esse fator foi afetado de modo diferente entre os alunos ao compará-los por curso.
+
+```{r}
+table(dados$hobbies)
+round(prop.table(table(dados$hobbies)),2)
+table(dados$hobbies,dados$curso)
+round(prop.table(table(dados$hobbies,dados$curso)),2)
+
+ggplot(dados,aes(x=hobbies, fill=curso)) +
+  geom_bar(aes(y=..prop.., group=curso),position="dodge") +
+  facet_wrap(~curso)+theme(axis.text.x = element_text(angle = 90))+configuracao +
+  #ggtitle("O que aconteceu com sua realização de hobbies ou atividades por prazer?") +
+  ylab("Proporção") +
+  xlab("Realização de hobbies")
+ggsave("figura5.jpeg")  
+```
+
+Os gráficos acima sugerem que as respostas dos estudantes variam de acordo com o curso analisado. Para os alunos de Administração, por exemplo, não houve nenhuma resposta sobre grande aumento ou manutenção da realização de hobbies, sendo que a maioria deles (por volta de 55%) informou que o nível de realização dessas atividades diminuiu muito. 
+
+Nos cursos de Ciências dos Alimentos e Gestão Ambiental, a distribuição das respostas foi mais uniforme, apresentando uma distribuição normal que concentra, em média, 30% de "diminuiu muito", 20% de "aumentou pouco" e "diminuiu pouco" e um pouco mais de 10% em "aumentou muito" e "diminuiu muito".
+
+Nas Ciências Biológicas foram poucas as pessoas relatando aumento, manutenção ou pouca diminuição desses caracteres, concentrando as respostas em "diminuiu muito". Em Ciências Econômicas os resultados para aumento foram ainda mais escassos, predominando a grande diminuição e incluindo algumas respostas para "diminuiu muito" e "se manteve".
+
+Os gráficos de Engenharia Agronômica e Engenharia Florestal são semelhantes, diferindo apenas na ligeira menor quantidade de futuros engenheiros florestais alegando grande aumento da prática de hobbies.
+
+Ao comparar os cursantes de pós-graduação, vê-se que mais alunos do doutorado diminuíram muito seus hobbies, quando comparados com os de mestrado, que possuem mais respostas "diminuiu pouco" do que os de doutorado. 
+
+Nota-se que **a prática dessas atividades acontece de modo distinto entre os estudantes de cada curso**, apesar de não haver um padrão explícito ou pesquisas anteriores sobre os alunos da ESALQ para analisarem com mais cautela tais comportamentos.
+
+
+## Quantidade de exercícios físicos de acordo com a idade
+
+Como o isolamento social dificulta a realização de exercícios a partir do fechamento de academias e da determinação do uso de máscaras em parques públicos, era de se esperar uma predominância de respostas marcando redução na quantidade semanal de exercícios. Como o formulário coletou a idade dos respondentes, foi feito um comparativo sobre a **quantidade de exercícios** e a **faixa etária** dos entrevistados. 
+
+```{r}
+table(dados$exercicios)
+round(prop.table(table(dados$exercicios)),2)
+table(dados$exercicios,dados$idade)
+round(prop.table(table(dados$exercicios,dados$idade)),2)
+
+ggplot(dados,aes(x=idade))+
+  geom_histogram(breaks = seq(18,46,4),
+                 col="black",
+                 fill="blue")+
+  scale_x_continuous(breaks = seq(18,46,4))+
+  facet_wrap(~exercicios,ncol=2)+
+  configuracao +
+  #ggtitle("O que aconteceu com sua quantidade semanal de exercícios físicos?") +
+  ylab("Número de respostas") +
+  xlab("Idade")
+ggsave("figura6.jpeg")  
+
+```
+
+Do total de respostas, 56% (ou 181 pessoas) notou uma grande diminuição na realização de atividades físicas e 11% (35 pessoas) uma diminuição pequena, totalizando 67% dos respondentes indicando menores níveis de exercícios. O aumento dos exercícios foi percebido por 19% dos entrevistados, enquanto a manutenção por 14%.
+
+Conforme o gráfico, a maior parte das respostas concentrou-se no intervalo de idade entre 18-22 anos, os quais informam que a quantidade de exercícios diminuiu muito. Para as faixas de 22-26 anos, 26-30 e 30-34, a maioria dos respondentes também indicou diminuição significativa na realização de atividades físicas. 
+
+No público de 34 a 38 anos, houve uma pequena concentração de respostas "se manteve". Os demais intervalos de idade representam poucas pessoas que participaram da pesquisa, não sendo viável fazer grandes afirmações que exibam um  possível comportamento de tal faixa etária devido à amostra ser reduzida.
+
+
+## Nível de tristeza de acordo com grau de isolamento
+
+Na mesma perspectiva da análise anterior, o estudo buscou relacionar se pessoas que ficam mais tempo em casa possuem um grau maior de tristeza a partir do isolamento.
+
+```{r}
+table(dados$trist)
+round(prop.table(table(dados$trist)),2)
+table(dados$trist,dados$isolamento)
+round(prop.table(table(dados$trist,dados$isolamento)),2)
+
+ggplot(dados, aes(as.numeric(isolamento)))+
+  geom_bar(col="black",fill="blue")+
+  facet_wrap(~trist,ncol=2)+configuracao+
+  labs(x="Tristeza", y= "Número de respostas")
+#, 
+       #title = "O que aconteceu com seu nível de tristeza durante a pandemia?")
+ggsave("figura7.jpeg")  
+```
+
+Nota-se que o número de respostas indicando aumento (tanto baixo quanto alto) da tristeza foi diminuindo conforme a quantidade de vezes que deixa o isolamento aumenta. Além disso, a manutenção dessa característica foi notada por uma certa quantidade de alunos que saem de casa entre 0 a 8 vezes. Uma pequena diminuição da tristeza foi percebida para uma parcela de estudantes que saem de casa entre 2 a 4 vezes por semana.
